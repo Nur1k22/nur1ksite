@@ -1,244 +1,253 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Калькулятор</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0f0f11;
-      --surface: #1a1a1f;
-      --surface2: #222228;
-      --border: rgba(255,255,255,0.07);
-      --accent: #c8ff57;
-      --accent-dim: rgba(200,255,87,0.12);
-      --text: #f0efe8;
-      --text-muted: rgba(240,239,232,0.4);
-      --op-color: #c8ff57;
-      --eq-bg: #c8ff57;
-      --eq-text: #0f0f11;
-      --danger: #ff5757;
-    }
-
-    body {
-      background: var(--bg);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'DM Sans', sans-serif;
-      overflow: hidden;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(200,255,87,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,255,87,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(200,255,87,0.06) 0%, transparent 70%);
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-
-    .wrapper { position: relative; z-index: 1; }
-
-    .label {
-      font-family: 'Space Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      margin-bottom: 14px;
-      padding-left: 2px;
-    }
-
-    .calc {
-      width: 340px;
-      background: var(--surface);
-      border-radius: 24px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      box-shadow:
-        0 0 0 1px rgba(200,255,87,0.05),
-        0 40px 80px rgba(0,0,0,0.6),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-    }
-
-    .display {
-      padding: 28px 28px 20px;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      min-height: 120px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      gap: 6px;
-    }
-
-    .history {
-      font-family: 'Space Mono', monospace;
-      font-size: 12px;
-      color: var(--text-muted);
-      text-align: right;
-      min-height: 18px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .current {
-      font-family: 'Space Mono', monospace;
-      font-size: 38px;
-      font-weight: 700;
-      color: var(--text);
-      text-align: right;
-      line-height: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      transition: font-size 0.15s ease;
-      letter-spacing: -0.02em;
-    }
-
-    .current.small { font-size: 28px; }
-    .current.tiny  { font-size: 20px; }
-
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-    }
-
-    .btn {
-      background: var(--surface);
-      border: none;
-      padding: 0;
-      height: 72px;
-      cursor: pointer;
-      font-family: 'Space Mono', monospace;
-      font-size: 16px;
-      color: var(--text);
-      position: relative;
-      overflow: hidden;
-      transition: background 0.1s ease;
-      outline: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .btn::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0);
-      transition: background 0.1s ease;
-    }
-
-    .btn:hover::after  { background: rgba(255,255,255,0.04); }
-    .btn:active::after { background: rgba(255,255,255,0.1); }
-    .btn.pressed { transform: scale(0.94); transition: transform 0.08s ease; }
-
-    .btn.op {
-      color: var(--op-color);
-      background: var(--surface2);
-      font-size: 18px;
-    }
-    .btn.op:hover::after { background: var(--accent-dim); }
-
-    .btn.clear { color: var(--danger); font-size: 13px; letter-spacing: 0.05em; }
-    .btn.ce    { font-size: 13px; letter-spacing: 0.03em; color: var(--text-muted); }
-    .btn.pct   { color: var(--text-muted); }
-
-    .btn.eq {
-      background: var(--eq-bg);
-      color: var(--eq-text);
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .btn.eq:hover::after  { background: rgba(0,0,0,0.07); }
-    .btn.eq:active::after { background: rgba(0,0,0,0.2); }
-
-    .btn:first-child              { border-radius: 0 0 0 24px; }
-    .calc .buttons .btn:last-child { border-radius: 0 0 24px 0; }
-
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(200,255,87,0.25);
-      transform: scale(0);
-      animation: ripple-anim 0.4s linear;
-      pointer-events: none;
-    }
-    .btn.eq .ripple { background: rgba(0,0,0,0.2); }
-
-    @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      20%,60%  { transform: translateX(-6px); }
-      40%,80%  { transform: translateX(6px); }
-    }
-    .display.shake { animation: shake 0.3s ease; }
-
-    @keyframes flash {
-      0%   { color: var(--accent); }
-      100% { color: var(--text); }
-    }
-    .current.flash { animation: flash 0.4s ease; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вопросы и правильные ответы</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0f14;--surface:#13161e;--border:#1e2230;
+  --text:#e4e2dc;--muted:#5a5a60;
+  --a0:#c8a96e;--a1:#6e9bc8;--a2:#c86e8a;
+  --c0:rgba(200,169,110,.1);--c1:rgba(110,155,200,.1);--c2:rgba(200,110,138,.1);
+  --th:58px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  opacity:.4;
+}
+header{padding:24px 44px 0;flex-shrink:0}
+.brand{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
+.tabs{display:flex;border-bottom:1px solid var(--border);gap:0}
+.tab{
+  background:none;border:none;cursor:pointer;
+  font-family:'Playfair Display',serif;font-size:13.5px;letter-spacing:2.5px;
+  padding:0 32px;height:var(--th);color:var(--muted);
+  position:relative;transition:color .25s;
+}
+.tab::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
+  transform:scaleX(0);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  transform-origin:left;
+}
+.tab[data-i="0"]::after{background:var(--a0)}
+.tab[data-i="1"]::after{background:var(--a1)}
+.tab[data-i="2"]::after{background:var(--a2)}
+.tab.on{color:var(--text)}
+.tab.on::after{transform:scaleX(1)}
+.tab-count{
+  display:inline-block;font-family:'Jost',sans-serif;font-size:9px;
+  letter-spacing:1px;vertical-align:middle;margin-left:7px;
+  padding:2px 6px;border-radius:3px;font-weight:400;
+}
+.tab[data-i="0"] .tab-count{background:rgba(200,169,110,.12);color:var(--a0)}
+.tab[data-i="1"] .tab-count{background:rgba(110,155,200,.12);color:var(--a1)}
+.tab[data-i="2"] .tab-count{background:rgba(200,110,138,.12);color:var(--a2)}
+.panels{
+  position:relative;
+  height:calc(100vh - var(--th) - 72px);
+  overflow:hidden;
+}
+.panel{
+  position:absolute;inset:0;
+  overflow-y:auto;
+  opacity:0;transform:translateY(10px);pointer-events:none;
+  transition:opacity .35s,transform .35s cubic-bezier(.4,0,.2,1);
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.panel.active{opacity:1;transform:translateY(0);pointer-events:all}
+.panel-inner{padding:32px 44px 80px;max-width:860px}
+.loading{
+  display:flex;align-items:center;justify-content:center;
+  height:200px;color:var(--muted);font-size:13px;letter-spacing:2px;
+}
+.error{
+  padding:40px;color:#c86e6e;font-size:13px;letter-spacing:1px;
+  background:rgba(200,110,110,.08);border-radius:8px;margin:32px 44px;
+}
+.qblock{
+  margin-bottom:14px;
+  background:var(--surface);
+  border-radius:8px;
+  padding:16px 20px 14px;
+  border-left:2.5px solid var(--border);
+  transition:border-color .2s;
+}
+.panel[data-panel="0"] .qblock:hover{border-left-color:var(--a0)}
+.panel[data-panel="1"] .qblock:hover{border-left-color:var(--a1)}
+.panel[data-panel="2"] .qblock:hover{border-left-color:var(--a2)}
+.qnum{font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.qtext{font-size:14px;line-height:1.65;color:var(--text);font-weight:400;margin-bottom:11px}
+.opts{display:flex;flex-direction:column;gap:4px}
+.opt{
+  display:flex;align-items:flex-start;gap:9px;
+  font-size:13px;line-height:1.55;color:#606068;
+  padding:3px 0;
+}
+.opt.correct{color:#9dc87a;font-weight:500}
+.dot{
+  width:13px;height:13px;border-radius:50%;
+  border:1px solid #252830;flex-shrink:0;margin-top:3px;
+  display:flex;align-items:center;justify-content:center;
+}
+.dot.dot-on{background:#9dc87a;border-color:#9dc87a}
+.dot.dot-on::after{
+  content:'';display:block;
+  width:5px;height:5px;border-radius:50%;background:var(--bg);
+}
+</style>
 </head>
 <body>
-  <div class="wrapper">
-    <div class="label">// Калькулятор v1.0</div>
-    <div class="calc" id="calc">
-      <div class="display" id="display">
-        <div class="history" id="history"></div>
-        <div class="current" id="current">0</div>
-      </div>
-      <div class="buttons">
-        <button class="btn clear" data-action="clear">AC</button>
-        <button class="btn ce"    data-action="ce">CE</button>
-        <button class="btn pct"   data-action="percent">%</button>
-        <button class="btn op"    data-action="op" data-op="÷">÷</button>
-
-        <button class="btn" data-action="num" data-num="7">7</button>
-        <button class="btn" data-action="num" data-num="8">8</button>
-        <button class="btn" data-action="num" data-num="9">9</button>
-        <button class="btn op" data-action="op" data-op="×">×</button>
-
-        <button class="btn" data-action="num" data-num="4">4</button>
-        <button class="btn" data-action="num" data-num="5">5</button>
-        <button class="btn" data-action="num" data-num="6">6</button>
-        <button class="btn op" data-action="op" data-op="−">−</button>
-
-        <button class="btn" data-action="num" data-num="1">1</button>
-        <button class="btn" data-action="num" data-num="2">2</button>
-        <button class="btn" data-action="num" data-num="3">3</button>
-        <button class="btn op" data-action="op" data-op="+">+</button>
-
-        <button class="btn" data-action="toggle-sign">±</button>
-        <button class="btn" data-action="num" data-num="0">0</button>
-        <button class="btn" data-action="decimal">.</button>
-        <button class="btn eq" data-action="equals">=</button>
-      </div>
-    </div>
+<header>
+  <div class="brand">Вопросы и правильные ответы</div>
+  <div class="tabs">
+    <button class="tab on" data-i="0">ИНСТРУКТОРСКИЙ<span class="tab-count" id="count-0">...</span></button>
+    <button class="tab" data-i="1">ЛИДЕР СМЕНЫ<span class="tab-count" id="count-1">...</span></button>
+    <button class="tab" data-i="2">БПИГК<span class="tab-count" id="count-2">...</span></button>
   </div>
+</header>
+<div class="panels">
+  <div class="panel active" data-panel="0"><div class="loading">Загрузка...</div></div>
+  <div class="panel" data-panel="1"><div class="loading">Загрузка...</div></div>
+  <div class="panel" data-panel="2"><div class="loading">Загрузка...</div></div>
+</div>
 
-  <script src="script.js"></script>
+<script>
+// ============================================================
+// НАСТРОЙКА: укажите пути к файлам в вашем репо
+// Примеры:
+//   GitHub raw: https://raw.githubusercontent.com/USER/REPO/main/Инструкторский.txt
+//   Относительный путь (если файлы лежат рядом с index.html): ./Инструкторский.txt
+// ============================================================
+const FILES = [
+  './Инструкторский.txt',
+  './Лидер_смены.txt',
+  './Бпигк.txt'
+];
+
+// Парсинг .txt формата
+function parseTxt(text) {
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const questions = [];
+  let current = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line.startsWith('===') || line.startsWith('ВСЕГО')) continue;
+
+    // Новый вопрос: начинается с числа и точки
+    const qMatch = line.match(/^(\d+)\.\s+(.+)/);
+    if (qMatch) {
+      if (current) questions.push(current);
+      current = { num: parseInt(qMatch[1]), text: qMatch[2], opts: [] };
+      continue;
+    }
+
+    // Вариант ответа
+    const optMatch = line.match(/^\[([✓—])\]\s+(.+)/);
+    if (optMatch && current) {
+      current.opts.push({ correct: optMatch[1] === '✓', text: optMatch[2] });
+      continue;
+    }
+
+    // Продолжение текста вопроса (многострочный)
+    if (current && current.opts.length === 0 && line) {
+      current.text += ' ' + line;
+    }
+  }
+  if (current) questions.push(current);
+  return questions;
+}
+
+function renderQuestions(questions, panelIndex) {
+  const panel = document.querySelector(`.panel[data-panel="${panelIndex}"]`);
+  const inner = document.createElement('div');
+  inner.className = 'panel-inner';
+
+  questions.forEach(q => {
+    const block = document.createElement('div');
+    block.className = 'qblock';
+
+    const qnum = document.createElement('div');
+    qnum.className = 'qnum';
+    qnum.textContent = `Вопрос ${q.num}`;
+
+    const qtext = document.createElement('div');
+    qtext.className = 'qtext';
+    qtext.textContent = q.text;
+
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+
+    q.opts.forEach(o => {
+      const opt = document.createElement('div');
+      opt.className = 'opt' + (o.correct ? ' correct' : '');
+
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (o.correct ? ' dot-on' : '');
+
+      const span = document.createElement('span');
+      span.textContent = o.text;
+
+      opt.appendChild(dot);
+      opt.appendChild(span);
+      opts.appendChild(opt);
+    });
+
+    block.appendChild(qnum);
+    block.appendChild(qtext);
+    block.appendChild(opts);
+    inner.appendChild(block);
+  });
+
+  panel.innerHTML = '';
+  panel.appendChild(inner);
+
+  // Обновляем счётчик
+  document.getElementById(`count-${panelIndex}`).textContent = questions.length;
+}
+
+async function loadFile(url, index) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    const questions = parseTxt(text);
+    renderQuestions(questions, index);
+  } catch (err) {
+    const panel = document.querySelector(`.panel[data-panel="${index}"]`);
+    panel.innerHTML = `<div class="error">
+      Не удалось загрузить файл: <strong>${url}</strong><br><br>
+      Ошибка: ${err.message}<br><br>
+      Убедитесь, что файл доступен по этому пути, и что CORS разрешён.
+    </div>`;
+    document.getElementById(`count-${index}`).textContent = '!';
+  }
+}
+
+// Загружаем все файлы
+FILES.forEach((url, i) => loadFile(url, i));
+
+// Переключение вкладок
+const tabs = document.querySelectorAll('.tab');
+const panels = document.querySelectorAll('.panel');
+tabs.forEach(t => {
+  t.addEventListener('click', () => {
+    const i = t.dataset.i;
+    tabs.forEach(x => x.classList.remove('on'));
+    panels.forEach(x => x.classList.remove('active'));
+    t.classList.add('on');
+    const p = document.querySelector(`.panel[data-panel="${i}"]`);
+    p.classList.add('active');
+    p.scrollTop = 0;
+  });
+});
+</script>
 </body>
 </html>
