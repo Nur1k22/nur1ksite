@@ -12,57 +12,121 @@
   --text:#e4e2dc;--muted:#5a5a60;
   --a0:#c8a96e;--a1:#6e9bc8;--a2:#c86e8a;
   --c0:rgba(200,169,110,.1);--c1:rgba(110,155,200,.1);--c2:rgba(200,110,138,.1);
-  --th:58px;
 }
-html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Jost',sans-serif;font-weight:300}
 body::after{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
   opacity:.4;
 }
-header{padding:24px 44px 0;flex-shrink:0}
-.brand{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:18px}
-.tabs{display:flex;border-bottom:1px solid var(--border);gap:0}
-.tab{
+
+/* HOME SCREEN */
+.home{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:40px 20px;gap:32px;
+}
+.home-brand{
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);
+  margin-bottom:8px;text-align:center;
+}
+.home-title{
+  font-family:'Playfair Display',serif;font-size:clamp(22px,4vw,36px);
+  font-weight:700;letter-spacing:1px;text-align:center;color:var(--text);
+  line-height:1.3;
+}
+.cards{
+  display:flex;flex-direction:column;gap:14px;width:100%;max-width:480px;
+}
+.card-btn{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;
+  padding:22px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:border-color .25s, background .25s, transform .2s;
+  position:relative;overflow:hidden;
+}
+.card-btn::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  transition:opacity .25s;opacity:0;
+}
+.card-btn[data-i="0"]::before{background:var(--a0)}
+.card-btn[data-i="1"]::before{background:var(--a1)}
+.card-btn[data-i="2"]::before{background:var(--a2)}
+.card-btn:hover{transform:translateY(-1px)}
+.card-btn[data-i="0"]:hover{border-color:var(--a0);background:rgba(200,169,110,.06)}
+.card-btn[data-i="1"]:hover{border-color:var(--a1);background:rgba(110,155,200,.06)}
+.card-btn[data-i="2"]:hover{border-color:var(--a2);background:rgba(200,110,138,.06)}
+.card-btn[data-i="0"]:hover::before,
+.card-btn[data-i="1"]:hover::before,
+.card-btn[data-i="2"]:hover::before{opacity:1}
+.card-label{
+  font-family:'Playfair Display',serif;
+  font-size:15px;letter-spacing:2px;
+  color:var(--text);
+}
+.card-right{display:flex;align-items:center;gap:12px}
+.card-count{
+  font-size:10px;letter-spacing:1px;font-family:'Jost',sans-serif;
+  padding:3px 8px;border-radius:4px;
+}
+.card-btn[data-i="0"] .card-count{background:rgba(200,169,110,.12);color:var(--a0)}
+.card-btn[data-i="1"] .card-count{background:rgba(110,155,200,.12);color:var(--a1)}
+.card-btn[data-i="2"] .card-count{background:rgba(200,110,138,.12);color:var(--a2)}
+.card-arrow{color:var(--muted);font-size:18px;transition:transform .2s, color .2s}
+.card-btn:hover .card-arrow{transform:translateX(4px);color:var(--text)}
+
+/* FULLSCREEN OVERLAY */
+.overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transform:translateY(18px);
+  transition:opacity .35s cubic-bezier(.4,0,.2,1), transform .35s cubic-bezier(.4,0,.2,1);
+}
+.overlay.open{
+  opacity:1;pointer-events:all;transform:translateY(0);
+}
+.overlay-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 32px 0;flex-shrink:0;border-bottom:1px solid var(--border);
+  padding-bottom:16px;
+}
+.overlay-title-wrap{display:flex;align-items:center;gap:14px}
+.overlay-back{
   background:none;border:none;cursor:pointer;
-  font-family:'Playfair Display',serif;font-size:13.5px;letter-spacing:2.5px;
-  padding:0 32px;height:var(--th);color:var(--muted);
-  position:relative;transition:color .25s;
+  color:var(--muted);font-size:20px;
+  padding:4px 8px;border-radius:6px;
+  transition:color .2s, background .2s;line-height:1;
 }
-.tab::after{
-  content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
-  transform:scaleX(0);transition:transform .35s cubic-bezier(.4,0,.2,1);
-  transform-origin:left;
+.overlay-back:hover{color:var(--text);background:var(--border)}
+.overlay-title{
+  font-family:'Playfair Display',serif;
+  font-size:15px;letter-spacing:2.5px;
+  color:var(--text);
 }
-.tab[data-i="0"]::after{background:var(--a0)}
-.tab[data-i="1"]::after{background:var(--a1)}
-.tab[data-i="2"]::after{background:var(--a2)}
-.tab.on{color:var(--text)}
-.tab.on::after{transform:scaleX(1)}
-.tab-count{
-  display:inline-block;font-family:'Jost',sans-serif;font-size:9px;
-  letter-spacing:1px;vertical-align:middle;margin-left:7px;
-  padding:2px 6px;border-radius:3px;font-weight:400;
+.overlay-count{
+  font-size:10px;letter-spacing:1px;font-family:'Jost',sans-serif;
+  padding:3px 8px;border-radius:4px;
 }
-.tab[data-i="0"] .tab-count{background:rgba(200,169,110,.12);color:var(--a0)}
-.tab[data-i="1"] .tab-count{background:rgba(110,155,200,.12);color:var(--a1)}
-.tab[data-i="2"] .tab-count{background:rgba(200,110,138,.12);color:var(--a2)}
-.panels{
-  position:relative;
-  height:calc(100vh - var(--th) - 72px);
-  overflow:hidden;
-}
-.panel{
-  position:absolute;inset:0;
-  overflow-y:auto;
-  opacity:0;transform:translateY(10px);pointer-events:none;
-  transition:opacity .35s,transform .35s cubic-bezier(.4,0,.2,1);
+.overlay[data-panel="0"] .overlay-count{background:rgba(200,169,110,.12);color:var(--a0)}
+.overlay[data-panel="1"] .overlay-count{background:rgba(110,155,200,.12);color:var(--a1)}
+.overlay[data-panel="2"] .overlay-count{background:rgba(200,110,138,.12);color:var(--a2)}
+.overlay[data-panel="0"] .overlay-title{border-bottom:2px solid var(--a0)}
+.overlay[data-panel="1"] .overlay-title{border-bottom:2px solid var(--a1)}
+.overlay[data-panel="2"] .overlay-title{border-bottom:2px solid var(--a2)}
+.overlay-title{border-bottom:2px solid transparent;padding-bottom:4px}
+
+.overlay-body{
+  flex:1;overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:var(--border) transparent;
 }
-.panel::-webkit-scrollbar{width:3px}
-.panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.panel.active{opacity:1;transform:translateY(0);pointer-events:all}
-.panel-inner{padding:32px 44px 80px;max-width:860px}
+.overlay-body::-webkit-scrollbar{width:3px}
+.overlay-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.panel-inner{padding:32px 44px 80px;max-width:860px;margin:0 auto}
+
 .loading{
   display:flex;align-items:center;justify-content:center;
   height:200px;color:var(--muted);font-size:13px;letter-spacing:2px;
@@ -79,9 +143,9 @@ header{padding:24px 44px 0;flex-shrink:0}
   border-left:2.5px solid var(--border);
   transition:border-color .2s;
 }
-.panel[data-panel="0"] .qblock:hover{border-left-color:var(--a0)}
-.panel[data-panel="1"] .qblock:hover{border-left-color:var(--a1)}
-.panel[data-panel="2"] .qblock:hover{border-left-color:var(--a2)}
+.overlay[data-panel="0"] .qblock:hover{border-left-color:var(--a0)}
+.overlay[data-panel="1"] .qblock:hover{border-left-color:var(--a1)}
+.overlay[data-panel="2"] .qblock:hover{border-left-color:var(--a2)}
 .qnum{font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .qtext{font-size:14px;line-height:1.65;color:var(--text);font-weight:400;margin-bottom:11px}
 .opts{display:flex;flex-direction:column;gap:4px}
@@ -104,59 +168,97 @@ header{padding:24px 44px 0;flex-shrink:0}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand">Вопросы и правильные ответы</div>
-  <div class="tabs">
-    <button class="tab on" data-i="0">ИНСТРУКТОРСКИЙ<span class="tab-count" id="count-0">...</span></button>
-    <button class="tab" data-i="1">ЛИДЕР СМЕНЫ<span class="tab-count" id="count-1">...</span></button>
-    <button class="tab" data-i="2">БПИГК<span class="tab-count" id="count-2">...</span></button>
+
+<!-- HOME SCREEN -->
+<div class="home" id="home">
+  <div>
+    <div class="home-brand">База знаний</div>
+    <div class="home-title">Вопросы и правильные ответы</div>
   </div>
-</header>
-<div class="panels">
-  <div class="panel active" data-panel="0"><div class="loading">Загрузка...</div></div>
-  <div class="panel" data-panel="1"><div class="loading">Загрузка...</div></div>
-  <div class="panel" data-panel="2"><div class="loading">Загрузка...</div></div>
+  <div class="cards">
+    <button class="card-btn" data-i="0">
+      <span class="card-label">ИНСТРУКТОРСКИЙ</span>
+      <span class="card-right">
+        <span class="card-count" id="count-0">...</span>
+        <span class="card-arrow">→</span>
+      </span>
+    </button>
+    <button class="card-btn" data-i="1">
+      <span class="card-label">ЛИДЕР СМЕНЫ</span>
+      <span class="card-right">
+        <span class="card-count" id="count-1">...</span>
+        <span class="card-arrow">→</span>
+      </span>
+    </button>
+    <button class="card-btn" data-i="2">
+      <span class="card-label">БПИГК</span>
+      <span class="card-right">
+        <span class="card-count" id="count-2">...</span>
+        <span class="card-arrow">→</span>
+      </span>
+    </button>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="overlay" data-panel="0" id="overlay-0">
+  <div class="overlay-header">
+    <div class="overlay-title-wrap">
+      <button class="overlay-back" id="back-0">←</button>
+      <span class="overlay-title">ИНСТРУКТОРСКИЙ</span>
+      <span class="overlay-count" id="oc-0">...</span>
+    </div>
+  </div>
+  <div class="overlay-body" id="body-0"><div class="loading">Загрузка...</div></div>
+</div>
+
+<div class="overlay" data-panel="1" id="overlay-1">
+  <div class="overlay-header">
+    <div class="overlay-title-wrap">
+      <button class="overlay-back" id="back-1">←</button>
+      <span class="overlay-title">ЛИДЕР СМЕНЫ</span>
+      <span class="overlay-count" id="oc-1">...</span>
+    </div>
+  </div>
+  <div class="overlay-body" id="body-1"><div class="loading">Загрузка...</div></div>
+</div>
+
+<div class="overlay" data-panel="2" id="overlay-2">
+  <div class="overlay-header">
+    <div class="overlay-title-wrap">
+      <button class="overlay-back" id="back-2">←</button>
+      <span class="overlay-title">БПИГК</span>
+      <span class="overlay-count" id="oc-2">...</span>
+    </div>
+  </div>
+  <div class="overlay-body" id="body-2"><div class="loading">Загрузка...</div></div>
 </div>
 
 <script>
-// ============================================================
-// НАСТРОЙКА: укажите пути к файлам в вашем репо
-// Примеры:
-//   GitHub raw: https://raw.githubusercontent.com/USER/REPO/main/Инструкторский.txt
-//   Относительный путь (если файлы лежат рядом с index.html): ./Инструкторский.txt
-// ============================================================
 const FILES = [
   './Инструкторский.txt',
   './Лидер_смены.txt',
   './Бпигк.txt'
 ];
 
-// Парсинг .txt формата
 function parseTxt(text) {
   const lines = text.replace(/\r\n/g, '\n').split('\n');
   const questions = [];
   let current = null;
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line || line.startsWith('===') || line.startsWith('ВСЕГО')) continue;
-
-    // Новый вопрос: начинается с числа и точки
     const qMatch = line.match(/^(\d+)\.\s+(.+)/);
     if (qMatch) {
       if (current) questions.push(current);
       current = { num: parseInt(qMatch[1]), text: qMatch[2], opts: [] };
       continue;
     }
-
-    // Вариант ответа
     const optMatch = line.match(/^\[([✓—])\]\s+(.+)/);
     if (optMatch && current) {
       current.opts.push({ correct: optMatch[1] === '✓', text: optMatch[2] });
       continue;
     }
-
-    // Продолжение текста вопроса (многострочный)
     if (current && current.opts.length === 0 && line) {
       current.text += ' ' + line;
     }
@@ -165,52 +267,46 @@ function parseTxt(text) {
   return questions;
 }
 
-function renderQuestions(questions, panelIndex) {
-  const panel = document.querySelector(`.panel[data-panel="${panelIndex}"]`);
+// Cache rendered content
+const rendered = [false, false, false];
+const questionsCache = [null, null, null];
+
+function renderQuestions(questions, index) {
+  const body = document.getElementById(`body-${index}`);
   const inner = document.createElement('div');
   inner.className = 'panel-inner';
-
   questions.forEach(q => {
     const block = document.createElement('div');
     block.className = 'qblock';
-
     const qnum = document.createElement('div');
     qnum.className = 'qnum';
     qnum.textContent = `Вопрос ${q.num}`;
-
     const qtext = document.createElement('div');
     qtext.className = 'qtext';
     qtext.textContent = q.text;
-
     const opts = document.createElement('div');
     opts.className = 'opts';
-
     q.opts.forEach(o => {
       const opt = document.createElement('div');
       opt.className = 'opt' + (o.correct ? ' correct' : '');
-
       const dot = document.createElement('span');
       dot.className = 'dot' + (o.correct ? ' dot-on' : '');
-
       const span = document.createElement('span');
       span.textContent = o.text;
-
       opt.appendChild(dot);
       opt.appendChild(span);
       opts.appendChild(opt);
     });
-
     block.appendChild(qnum);
     block.appendChild(qtext);
     block.appendChild(opts);
     inner.appendChild(block);
   });
-
-  panel.innerHTML = '';
-  panel.appendChild(inner);
-
-  // Обновляем счётчик
-  document.getElementById(`count-${panelIndex}`).textContent = questions.length;
+  body.innerHTML = '';
+  body.appendChild(inner);
+  document.getElementById(`count-${index}`).textContent = questions.length;
+  document.getElementById(`oc-${index}`).textContent = questions.length;
+  rendered[index] = true;
 }
 
 async function loadFile(url, index) {
@@ -219,35 +315,74 @@ async function loadFile(url, index) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const questions = parseTxt(text);
-    renderQuestions(questions, index);
+    questionsCache[index] = questions;
+    document.getElementById(`count-${index}`).textContent = questions.length;
+    document.getElementById(`oc-${index}`).textContent = questions.length;
   } catch (err) {
-    const panel = document.querySelector(`.panel[data-panel="${index}"]`);
-    panel.innerHTML = `<div class="error">
-      Не удалось загрузить файл: <strong>${url}</strong><br><br>
-      Ошибка: ${err.message}<br><br>
-      Убедитесь, что файл доступен по этому пути, и что CORS разрешён.
-    </div>`;
+    questionsCache[index] = { error: err.message, url };
     document.getElementById(`count-${index}`).textContent = '!';
+    document.getElementById(`oc-${index}`).textContent = '!';
   }
 }
 
-// Загружаем все файлы
-FILES.forEach((url, i) => loadFile(url, i));
+function openOverlay(index) {
+  const overlay = document.getElementById(`overlay-${index}`);
+  overlay.classList.add('open');
+  document.getElementById('home').style.visibility = 'hidden';
 
-// Переключение вкладок
-const tabs = document.querySelectorAll('.tab');
-const panels = document.querySelectorAll('.panel');
-tabs.forEach(t => {
-  t.addEventListener('click', () => {
-    const i = t.dataset.i;
-    tabs.forEach(x => x.classList.remove('on'));
-    panels.forEach(x => x.classList.remove('active'));
-    t.classList.add('on');
-    const p = document.querySelector(`.panel[data-panel="${i}"]`);
-    p.classList.add('active');
-    p.scrollTop = 0;
-  });
+  // Render on first open
+  if (!rendered[index]) {
+    const cache = questionsCache[index];
+    if (!cache) {
+      // still loading, wait
+      const body = document.getElementById(`body-${index}`);
+      body.innerHTML = '<div class="loading">Загрузка...</div>';
+      const wait = setInterval(() => {
+        if (questionsCache[index]) {
+          clearInterval(wait);
+          showContent(index);
+        }
+      }, 100);
+    } else {
+      showContent(index);
+    }
+  }
+}
+
+function showContent(index) {
+  const cache = questionsCache[index];
+  if (cache && cache.error) {
+    const body = document.getElementById(`body-${index}`);
+    body.innerHTML = `<div class="error">
+      Не удалось загрузить файл: <strong>${cache.url}</strong><br><br>
+      Ошибка: ${cache.error}<br><br>
+      Убедитесь, что файл доступен по этому пути, и что CORS разрешён.
+    </div>`;
+    rendered[index] = true;
+  } else if (cache) {
+    renderQuestions(cache, index);
+  }
+}
+
+function closeOverlay(index) {
+  const overlay = document.getElementById(`overlay-${index}`);
+  overlay.classList.remove('open');
+  document.getElementById('home').style.visibility = 'visible';
+  document.getElementById(`overlay-${index}`).querySelector('.overlay-body').scrollTop = 0;
+}
+
+// Card buttons open overlays
+document.querySelectorAll('.card-btn').forEach(btn => {
+  btn.addEventListener('click', () => openOverlay(parseInt(btn.dataset.i)));
 });
+
+// Back buttons close overlays
+[0,1,2].forEach(i => {
+  document.getElementById(`back-${i}`).addEventListener('click', () => closeOverlay(i));
+});
+
+// Preload all files on start
+FILES.forEach((url, i) => loadFile(url, i));
 </script>
 </body>
 </html>
