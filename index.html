@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Калькулятор</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f11;
+      --surface: #1a1a1f;
+      --surface2: #222228;
+      --border: rgba(255,255,255,0.07);
+      --accent: #c8ff57;
+      --accent-dim: rgba(200,255,87,0.12);
+      --text: #f0efe8;
+      --text-muted: rgba(240,239,232,0.4);
+      --op-color: #c8ff57;
+      --eq-bg: #c8ff57;
+      --eq-text: #0f0f11;
+      --danger: #ff5757;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,255,87,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,255,87,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(200,255,87,0.06) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    .label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-left: 2px;
+    }
+
+    .calc {
+      width: 340px;
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(200,255,87,0.05),
+        0 40px 80px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    /* Display */
+    .display {
+      padding: 28px 28px 20px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .history {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+      min-height: 18px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .current {
+      font-family: 'Space Mono', monospace;
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: right;
+      line-height: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: font-size 0.15s ease;
+      letter-spacing: -0.02em;
+    }
+
+    .current.small { font-size: 28px; }
+    .current.tiny  { font-size: 20px; }
+
+    /* Buttons grid */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .btn {
+      background: var(--surface);
+      border: none;
+      padding: 0;
+      height: 72px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+      position: relative;
+      overflow: hidden;
+      transition: background 0.1s ease, color 0.1s ease;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.1s ease;
+    }
+
+    .btn:hover::after  { background: rgba(255,255,255,0.04); }
+    .btn:active::after { background: rgba(255,255,255,0.1); }
+
+    /* Press animation */
+    .btn.pressed { transform: scale(0.94); transition: transform 0.08s ease; }
+
+    /* Span 2 cols */
+    .btn.span2 { grid-column: span 2; }
+
+    /* Operator buttons */
+    .btn.op {
+      color: var(--op-color);
+      background: var(--surface2);
+      font-size: 18px;
+    }
+    .btn.op:hover::after { background: var(--accent-dim); }
+
+    /* Clear button */
+    .btn.clear {
+      color: var(--danger);
+      font-size: 13px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Equal button */
+    .btn.eq {
+      background: var(--eq-bg);
+      color: var(--eq-text);
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .btn.eq:hover::after  { background: rgba(0,0,0,0.07); }
+    .btn.eq:active::after { background: rgba(0,0,0,0.2); }
+
+    /* Special: CE */
+    .btn.ce {
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+    }
+
+    /* Percent */
+    .btn.pct { color: var(--text-muted); }
+
+    /* Corner radii */
+    .btn:first-child { border-radius: 0 0 0 24px; }
+    .calc .buttons .btn:last-child { border-radius: 0 0 24px 0; }
+
+    /* Ripple effect */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(200, 255, 87, 0.25);
+      transform: scale(0);
+      animation: ripple-anim 0.4s linear;
+      pointer-events: none;
+    }
+    .btn.eq .ripple { background: rgba(0,0,0,0.2); }
+
+    @keyframes ripple-anim {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* Error shake */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-6px); }
+      40%,80%  { transform: translateX(6px); }
+    }
+    .display.shake { animation: shake 0.3s ease; }
+
+    /* Result flash */
+    @keyframes flash {
+      0%   { color: var(--accent); }
+      100% { color: var(--text); }
+    }
+    .current.flash { animation: flash 0.4s ease; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="label">// Калькулятор v1.0</div>
+    <div class="calc" id="calc">
+      <div class="display" id="display">
+        <div class="history" id="history"></div>
+        <div class="current" id="current">0</div>
+      </div>
+      <div class="buttons">
+        <button class="btn clear"   data-action="clear">AC</button>
+        <button class="btn ce"      data-action="ce">CE</button>
+        <button class="btn pct"     data-action="percent">%</button>
+        <button class="btn op"      data-action="op" data-op="÷">÷</button>
+
+        <button class="btn"         data-action="num" data-num="7">7</button>
+        <button class="btn"         data-action="num" data-num="8">8</button>
+        <button class="btn"         data-action="num" data-num="9">9</button>
+        <button class="btn op"      data-action="op" data-op="×">×</button>
+
+        <button class="btn"         data-action="num" data-num="4">4</button>
+        <button class="btn"         data-action="num" data-num="5">5</button>
+        <button class="btn"         data-action="num" data-num="6">6</button>
+        <button class="btn op"      data-action="op" data-op="−">−</button>
+
+        <button class="btn"         data-action="num" data-num="1">1</button>
+        <button class="btn"         data-action="num" data-num="2">2</button>
+        <button class="btn"         data-action="num" data-num="3">3</button>
+        <button class="btn op"      data-action="op" data-op="+">+</button>
+
+        <button class="btn"         data-action="toggle-sign">±</button>
+        <button class="btn"         data-action="num" data-num="0">0</button>
+        <button class="btn"         data-action="decimal">.</button>
+        <button class="btn eq"      data-action="equals">=</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const display  = document.getElementById('display');
+    const current  = document.getElementById('current');
+    const history  = document.getElementById('history');
+
+    let state = {
+      current: '0',
+      prev: null,
+      op: null,
+      justCalc: false
+    };
+
+    function updateDisplay() {
+      const val = state.current;
+      current.textContent = formatNum(val);
+      current.className = 'current';
+      if (val.length > 12) current.classList.add('tiny');
+      else if (val.length > 8) current.classList.add('small');
+    }
+
+    function formatNum(s) {
+      if (s === 'Ошибка') return s;
+      const parts = s.split('.');
+      const intPart = parts[0].replace('-','');
+      const neg = parts[0].startsWith('-') ? '-' : '';
+      const formatted = parseInt(intPart).toLocaleString('ru-RU');
+      return neg + (parts.length > 1 ? formatted + '.' + parts[1] : formatted);
+    }
+
+    function ripple(btn, e) {
+      const r = document.createElement('span');
+      r.className = 'ripple';
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+      btn.appendChild(r);
+      r.addEventListener('animationend', () => r.remove());
+    }
+
+    function pressAnim(btn) {
+      btn.classList.add('pressed');
+      setTimeout(() => btn.classList.remove('pressed'), 120);
+    }
+
+    function shakeDisplay() {
+      display.classList.remove('shake');
+      void display.offsetWidth;
+      display.classList.add('shake');
+    }
+
+    function flashResult() {
+      current.classList.remove('flash');
+      void current.offsetWidth;
+      current.classList.add('flash');
+    }
+
+    function toNum(s) { return parseFloat(s.replace(/\s/g, '')); }
+
+    function calculate(a, op, b) {
+      const x = toNum(a), y = toNum(b);
+      if (op === '÷') { if (y === 0) return null; return x / y; }
+      if (op === '×') return x * y;
+      if (op === '−') return x - y;
+      if (op === '+') return x + y;
+      return y;
+    }
+
+    function handleAction(action, extra) {
+      if (action === 'num') {
+        if (state.justCalc) { state.current = extra; state.justCalc = false; }
+        else if (state.current === '0') state.current = extra;
+        else if (state.current.length < 14) state.current += extra;
+      }
+
+      else if (action === 'decimal') {
+        if (state.justCalc) { state.current = '0.'; state.justCalc = false; return; }
+        if (!state.current.includes('.')) state.current += '.';
+      }
+
+      else if (action === 'clear') {
+        state = { current: '0', prev: null, op: null, justCalc: false };
+        history.textContent = '';
+      }
+
+      else if (action === 'ce') {
+        state.current = '0';
+        state.justCalc = false;
+      }
+
+      else if (action === 'percent') {
+        const n = toNum(state.current);
+        if (state.prev && state.op) {
+          state.current = String(toNum(state.prev) * n / 100);
+        } else {
+          state.current = String(n / 100);
+        }
+        state.justCalc = false;
+      }
+
+      else if (action === 'toggle-sign') {
+        if (state.current !== '0') {
+          state.current = state.current.startsWith('-')
+            ? state.current.slice(1)
+            : '-' + state.current;
+        }
+      }
+
+      else if (action === 'op') {
+        if (state.op && !state.justCalc) {
+          const res = calculate(state.prev, state.op, state.current);
+          if (res === null) { state.current = 'Ошибка'; shakeDisplay(); updateDisplay(); return; }
+          state.prev = String(res);
+          state.current = String(res);
+        } else {
+          state.prev = state.current;
+        }
+        state.op = extra;
+        state.justCalc = false;
+        history.textContent = formatNum(state.prev) + ' ' + extra;
+      }
+
+      else if (action === 'equals') {
+        if (!state.op || state.prev === null) return;
+        const res = calculate(state.prev, state.op, state.current);
+        if (res === null) {
+          state.current = 'Ошибка';
+          history.textContent = formatNum(state.prev) + ' ' + state.op + ' ' + formatNum(state.current) + ' =';
+          shakeDisplay();
+          updateDisplay();
+          return;
+        }
+        history.textContent = formatNum(state.prev) + ' ' + state.op + ' ' + formatNum(state.current) + ' =';
+        const rounded = parseFloat(res.toPrecision(12));
+        state.current = String(rounded);
+        state.prev = null;
+        state.op = null;
+        state.justCalc = true;
+        flashResult();
+      }
+
+      updateDisplay();
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', e => {
+      const map = {
+        '0':'num:0','1':'num:1','2':'num:2','3':'num:3','4':'num:4',
+        '5':'num:5','6':'num:6','7':'num:7','8':'num:8','9':'num:9',
+        '.':'decimal',',':'decimal',
+        '+':'op:+','-':'op:−','*':'op:×','/':'op:÷',
+        'Enter':'equals','=':'equals',
+        'Backspace':'ce','Escape':'clear','%':'percent'
+      };
+      const cmd = map[e.key];
+      if (!cmd) return;
+      e.preventDefault();
+      const [action, extra] = cmd.split(':');
+      handleAction(action, extra);
+
+      // Highlight button
+      const sel = action === 'num' ? `[data-num="${extra}"]`
+        : action === 'op' ? `[data-op="${extra}"]`
+        : `[data-action="${action}"]`;
+      const btn = document.querySelector(sel);
+      if (btn) { pressAnim(btn); }
+    });
+
+    // Click events
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        ripple(btn, e);
+        pressAnim(btn);
+        const action = btn.dataset.action;
+        const extra = btn.dataset.op || btn.dataset.num;
+        handleAction(action, extra);
+      });
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
